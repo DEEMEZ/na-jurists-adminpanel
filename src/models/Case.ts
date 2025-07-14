@@ -1,23 +1,35 @@
-// src/models/Case.ts
-import { Schema, model } from 'mongoose';
-import { ICase } from '../types/case';
+// models/Case.ts
+import mongoose, { Schema, Model } from 'mongoose';
+import { ICase } from '@/types';
 
-const caseSchema = new Schema<ICase>(
-  {
-    title: { type: String, required: true },
-    description: { type: String, required: true },
-    category: { type: String, required: true },
-    tags: { type: [String], default: [] },
-    status: { type: String, enum: ['open', 'closed', 'pending'], default: 'open' },
-    createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    updatedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    attachments: { type: [String], default: [] },
+const AttachmentSchema: Schema = new Schema({
+  url: { type: String, required: true },
+  name: { type: String, required: true },
+  size: { type: Number, required: true },
+  type: { type: String, required: true }
+});
+
+const CaseSchema: Schema = new Schema({
+  title: { type: String, required: true },
+  description: { type: String, required: true },
+  category: { type: String, required: true },
+  tags: { type: [String], default: [] },
+  attachments: { type: [AttachmentSchema], default: [] },
+  createdBy: { 
+    type: Schema.Types.ObjectId, 
+    ref: 'User',
+    required: true 
   },
-  {
-    timestamps: true,
-  }
-);
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
+});
 
-const Case = model<ICase>('Case', caseSchema);
+CaseSchema.pre('save', function(next) {
+  this.updatedAt = new Date();
+  next();
+});
+
+const Case: Model<ICase> = 
+  mongoose.models.Case || mongoose.model<ICase>('Case', CaseSchema);
 
 export default Case;
